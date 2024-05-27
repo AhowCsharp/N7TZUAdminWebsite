@@ -121,16 +121,8 @@ export default function SuperAdminList() {
   ];
 
   const handleDeleteSubmit = async (id) => {
-    const config = {
-      headers: {
-        'X-Ap-AdminId': `${sessionStorage.getItem('Id')}`,
-        'X-Ap-StoreId': `${sessionStorage.getItem('StoreId')}`,
-        'X-Ap-AdminToken': `${sessionStorage.getItem('Token')}`,
-      }
-    }; 
     try {
         const response = await axios.delete(`${API_PATH}/businessman`, {
-            ...config,
             params: { id }
         });
 

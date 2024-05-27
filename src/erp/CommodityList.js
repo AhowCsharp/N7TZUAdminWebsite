@@ -156,7 +156,7 @@ export default function CommodityList() {
   ];
   const [selectedOption, setSelectedOption] = useState({
     id: 2,
-    name: "ddd"
+    name: "預設值"
 });
   const handleChangePage = (event, newPage) => {
     setPage(newPage)

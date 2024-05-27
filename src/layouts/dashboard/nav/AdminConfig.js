@@ -20,6 +20,11 @@ const AdminConfig = [
     title: '賞品列表',
     path: '/admin/commodities',
     icon: icon('ic_analytics')
+  },
+  {
+    title: '每日簽到設定',
+    path: '/admin/everyday',
+    icon: icon('ic_analytics')
   }
 ];
 

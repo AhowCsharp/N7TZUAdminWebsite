@@ -1,5 +1,5 @@
 #!/bin/bash
-host=estatetest.uk
+host=n7tzu.org
 path=/x/srv/www
 npm run build
 cd build

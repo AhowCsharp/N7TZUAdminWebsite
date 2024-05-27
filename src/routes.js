@@ -9,6 +9,7 @@ import Page404 from './pages/Page404';
 import SuperAdminList from './erp/SuperAdminList';
 import ManufacturerList from './erp/ManufacturerList';
 import CommodityList from './erp/CommodityList';
+import EverydaySet from './erp/EverydaySet'
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -29,6 +30,7 @@ export default function Router() {
         { path: 'superadmins', element: <SuperAdminList /> },
         { path: 'manufacturers', element: <ManufacturerList /> },
         { path: 'commodities', element: <CommodityList /> },
+        { path: 'everyday', element: <EverydaySet /> },
       ],
     },
     {
