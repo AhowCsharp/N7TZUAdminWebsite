@@ -22,10 +22,6 @@ import CommoditySearch from '../search/CommoditySearch';
 
 const API_PATH = process.env.REACT_APP_API_PATH;
 
-const columnVisibilityModel = {
-  id:true
-}
-
 export default function CommodityList() {
   LicenseInfo.setLicenseKey('9af075c09b5df7441264261f25d3d08eTz03ODI4MyxFPTE3MzEwNzgzMTkwMDAsUz1wcm8sTE09c3Vic2NyaXB0aW9uLEtWPTI=');
   const navigate = useNavigate();
@@ -183,7 +179,7 @@ export default function CommodityList() {
         // Unauthorized
         navigate('/login', { replace: true });
       } else {
-        alert('發生錯誤');
+        alert('權限不足 跳回登入頁');
       }
     }
   };
@@ -195,7 +191,7 @@ export default function CommodityList() {
       if (response.status === 200) { 
         setRows(response.data.source);
         setFilterRows(response.data.source);
-        setTotalRows(response.data.totalRows)
+        setTotalRows(response.data.totalItemCount)
       }
     } catch (error) {
       console.error('Error fetching data: ', error);
@@ -204,7 +200,7 @@ export default function CommodityList() {
         // Unauthorized
         navigate('/login', { replace: true });
       } else {
-        alert('發生錯誤');
+        alert('權限不足 跳回登入頁');
       }
     }
   };

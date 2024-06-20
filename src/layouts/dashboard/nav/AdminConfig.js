@@ -17,6 +17,11 @@ const AdminConfig = [
     icon: icon('ic_analytics')
   },
   {
+    title: '顧客列表',
+    path: '/admin/customers',
+    icon: icon('ic_analytics')
+  },
+  {
     title: '賞品列表',
     path: '/admin/commodities',
     icon: icon('ic_analytics')

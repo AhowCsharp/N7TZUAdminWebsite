@@ -10,18 +10,22 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import dayjs from 'dayjs';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import TablePagination from '@mui/material/TablePagination';
 import { Link,useNavigate } from 'react-router-dom';
-
-import SuperAdminSearch from '../search/SuperAdminSearch';
-
+import LockResetIcon from '@mui/icons-material/LockReset';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CustomerSearch from '../search/CustomerSearch';
+import FinishedAlert from '../finishView/FinishedAlert';
 
 
 const API_PATH = process.env.REACT_APP_API_PATH;
@@ -30,24 +34,32 @@ const columnVisibilityModel = {
   id:true
 }
 
-export default function SuperAdminList() {
+export default function CustomerList() {
   LicenseInfo.setLicenseKey('9af075c09b5df7441264261f25d3d08eTz03ODI4MyxFPTE3MzEwNzgzMTkwMDAsUz1wcm8sTE09c3Vic2NyaXB0aW9uLEtWPTI=');
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [filterRows,setFilterRows] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [request, setRequest] = useState({
-    id : 0,
-    name : '',
-    authType : 1,
-    account : '',
-    password : '',
-  });
+  const [moneyOpen, setMoneyOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalRows, setTotalRows] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [okOpen,setOkopen] = useState(false);
+  const [newPw,setNewPw] = useState('');
+  const [customerMoney,setCustomerMoney]= useState(0);
+  const [customerId,setCustomerId]= useState(0);
+  const [tickets,setTickets]= useState(0);
+
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     {
       field: 'name',
       headerName: '名稱',
+      width: 120,
+      editable: false,
+    },
+    {
+      field: 'nickName',
+      headerName: '暱稱',
       width: 120,
       editable: false,
     },
@@ -58,11 +70,22 @@ export default function SuperAdminList() {
       editable: false,
     },
     {
-      field: 'authType',
-      headerName: '權限',
-      width: 70,
+      field: 'phoneNum',
+      headerName: '電話號碼',
+      width: 120,
       editable: false,
-      valueFormatter: (params) => params.value === 1 ? '超級' : '一般',
+    },
+    {
+      field: 'email',
+      headerName: '信箱',
+      width: 120,
+      editable: false,
+    },
+    {
+      field: 'moneyAmount',
+      headerName: '錢包',
+      width: 120,
+      editable: false,
     },
     {
       field: 'creator',
@@ -106,97 +129,102 @@ export default function SuperAdminList() {
     {
       field: 'Operation',
       headerName: '操作',
-      width: 120,
+      width: 150,
       renderCell: (params) => (
         <>
-          <IconButton aria-label="edit" onClick={() => handleOpenForm('edit',params.row)}>
-            <EditIcon />
+          <IconButton aria-label="reset" onClick={() => resetPassword(params.row.id)}>
+            <LockResetIcon />
           </IconButton>
-          <IconButton aria-label="delete" onClick={() => handleDeleteSubmit(params.row.id)}>
-            <DeleteIcon />
-          </IconButton>
-        </>  
+        </>
+  
       ),
     },
   ];
 
-  const handleDeleteSubmit = async (id) => {
-    try {
-        const response = await axios.delete(`${API_PATH}/businessman`, {
-            params: { id }
-        });
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  };
 
-        if (response.status === 200) {
-            fetchData();
-        }
-    } catch (error) {
-        console.error("Error deleting record:", error);
-        console.log('請確認資料型態有無錯誤')
-    }
-  }
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${API_PATH}/super/admins`);
+      const response = await axios.get(`${API_PATH}/super/customers?pageNumber=${page+1}&pageSize=${rowsPerPage}`);
   
       if (response.status === 200) { 
         setRows(response.data.source);
         setFilterRows(response.data.source);
+        setTotalRows(response.data.totalItemCount)
       }
     } catch (error) {
-      console.log(error.response.data)
+      console.error('Error fetching data: ', error);
+  
+      if (error.response && error.response.status === 401) {
+        // Unauthorized
+        navigate('/login', { replace: true });
+      } else {
+        alert('權限不足 跳回登入頁');
+      }
     }
   };
-  const handleOpenForm = async (model,row) => {
-    if(model === 'create'){
-      setRequest({
-        id : 0,
-        name : '',
-        authType : 1,
-        account: parseInt(sessionStorage.getItem('StoreId'),10),
-        password : '',
-      });
+  const handleOkOpen = () => {
+    setOkopen(true);
+  }
+  // eslint-disable-next-line consistent-return
+  const resetPassword = async (id) => {
+    // 弹出确认对话框
+    const confirmReset = window.confirm("您確定要重製密碼？");
+    if (!confirmReset) {
+      return; // 如果用户点击“取消”，则不执行任何操作
     }
-    if(model === 'edit'){
-      setRequest({
-        id : row.id,
-        name : row.name,
-        authType : row.authType,
-        account:row.account,
-        password : row.password ,
-      });
-    }
-    setOpen(true);
-  };
-
-  const handleCloseForm = async () => {
-    setOpen(false);
-  };
-
-  const handleInputChange = (event, propertyName) => {
-    const value = event.target.value;
-    setRequest((prevData) => ({
-      ...prevData,
-      [propertyName]: value,
-    }));
-  };
-
-  const handleSubmit = async () => {    
+  
     try {
-        const response = await axios.post(`${API_PATH}/super/admin`, request);
+      const response = await axios.put(`${API_PATH}/super/customerpw?id=${id}`);
+      if (response.status === 200) {
+        setNewPw(response.data.source); // 设置新密码
+        handleOkOpen(); // 打开一个成功提示的对话框或其他反馈机制
+      }
+    } catch (error) {
+      console.error('Failed to reset password', error.response || error);
+      alert('重製密碼失敗：');
+      throw error; // 抛出错误，允许调用者知道操作失败
+    }
+  }
+  const handleMoneyOpenForm = async (row) => {
+    setCustomerId(row.id);
+    setMoneyOpen(true);
+  };
+
+  const handleMoenyCloseForm = async () => {
+    setMoneyOpen(false);
+  };
+
+// eslint-disable-next-line consistent-return
+const updateCustomerIdMoney = async () => {
+    const requestData = {
+        id:customerId,
+        Money: customerMoney,
+        Tickets: tickets
+    };
+    try {
+        const response = await axios.put(`${API_PATH}/super/wallet`, requestData);
+
         if (response.status === 200) {
-          alert('成功');
-          handleCloseForm();
-          fetchData();
+          handleMoenyCloseForm();
+          await fetchData();
         }
     } catch (error) {
-      console.log(error.response.data)
-    }                    
-  }
+        console.log(error.response.data)
+    }
+};
 
   useEffect(() => {
     fetchData();
-  }, []); 
-
+  }, [page,rowsPerPage]); 
 
   return (
     <>
@@ -204,28 +232,29 @@ export default function SuperAdminList() {
       <Grid container spacing={2} style={{marginBottom:'1%'}}>
             <Grid item xs={12} style={{display:'flex',justifyContent:'center'}}>      
                 <Typography variant="h2" component="h2">
-                    管理者列表 
+                    顧客列表 
                 </Typography>
             </Grid>
-            <SuperAdminSearch rows={rows} setFilterRows={setFilterRows}/>
-            <Button onClick={() =>handleOpenForm('create')} startIcon={<AddCircleOutlineIcon/>}>新增平台管理者</Button>  
+            <CustomerSearch rows={rows} setFilterRows={setFilterRows}/>
       </Grid>
       <DataGridPro
         rows={filterRows}
         columns={columns}
-        columnVisibilityModel={columnVisibilityModel}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              pageSize: 100,
-            },
-          },
-        }}
-        pageSizeOptions={[100,75,50]}
         disableRowSelectionOnClick
+        onCellDoubleClick={handleMoneyOpenForm}
       />
+      <TablePagination
+      component="div"
+      count={totalRows}
+      page={page}
+      onPageChange={handleChangePage}
+      rowsPerPage={rowsPerPage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[50,100,200,500]} 
+    />
     </Box>
-    <Dialog open={open} 
+
+      <Dialog open={moneyOpen} 
           BackdropProps={{
             style: {
               backgroundColor: 'transparent',
@@ -233,11 +262,11 @@ export default function SuperAdminList() {
           }}
           PaperProps={{
             style: {
-              width: '300px',
+              width: '200px',
             },
           }}
       >
-        <DialogTitle style={{justifyContent:'center',display:'flex',fontSize:'16px'}}>{request.id === 0?'新增平台管理者':'修改平台管理者'}</DialogTitle>
+        <DialogTitle style={{justifyContent:'center',display:'flex',fontSize:'16px'}}>派發代幣</DialogTitle>
         <DialogContent>
             <Box sx={{ flexGrow: 0 }}>
                 <Grid container spacing={2}>.                  
@@ -246,12 +275,12 @@ export default function SuperAdminList() {
                         fullWidth 
                         id="outlined-number"
                         size="small"
-                        label="管理者名稱"
+                        label="派發代幣"
                         InputLabelProps={{
                             shrink: true,
                         }}
-                        value={request.name}
-                        onChange={(e) => handleInputChange(e, 'name')}
+                        onChange={(e) => setCustomerMoney(e.target.value)}
+                        value={customerMoney}
                         />
                     </Grid>
                     <Grid item xs={12} sx={{ mt: 1 }} style={{justifyContent:'center',display:'flex' }}>
@@ -259,51 +288,24 @@ export default function SuperAdminList() {
                         fullWidth 
                         id="outlined-number"
                         size="small"
-                        label="帳號"
+                        label="派發抽獎券"
                         InputLabelProps={{
                             shrink: true,
                         }}
-                      
-                        value={request.account}
-                        onChange={(e) => handleInputChange(e, 'account')}
+                        onChange={(e) => setTickets(e.target.value)}
+                        value={tickets}
                         />
-                    </Grid>
-                    <Grid item xs={12} sx={{ mt: 1 }} style={{justifyContent:'center',display:'flex' }}>
-                        <TextField
-                        fullWidth 
-                        id="outlined-number"
-                        size="small"
-                        label="密碼"
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        disabled={request.id !== 0}
-                        value={request.password}
-                        onChange={(e) => handleInputChange(e, 'password')}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sx={{ mt: 1 }} style={{justifyContent:'center',display:'flex',marginRight:'10px' }}>
-                      <FormControl fullWidth>
-                        <InputLabel id="demo-simple-select-label">權限</InputLabel>
-                        <Select
-                          labelId="demo-simple-select-label"
-                          id="demo-simple-select"
-                          value={request.authType}
-                          onChange={(e) => handleInputChange(e, 'authType')}
-                        >
-                          <MenuItem value={1}>超級</MenuItem>
-                          <MenuItem value={0}>一搬</MenuItem>
-                        </Select>
-                      </FormControl>
                     </Grid>
                 </Grid>
             </Box> 
         </DialogContent>
         <DialogActions>
-              <Button onClick={handleSubmit}>送出</Button>  
-              <Button onClick={handleCloseForm}>取消</Button>  
+              <Button onClick={updateCustomerIdMoney} startIcon={<AttachMoneyIcon/>}>送出</Button>  
+              <Button onClick={handleMoenyCloseForm} startIcon={<CancelIcon/>}>取消</Button>  
         </DialogActions>
       </Dialog>
+      <FinishedAlert okOpen={okOpen} handleOkClose={()=>setOkopen(false)} title={'操作成功'} message={`新密碼為:${newPw}`}/>
     </>
   );
 }
+

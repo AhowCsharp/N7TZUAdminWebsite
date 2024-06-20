@@ -43,7 +43,7 @@ export default function LoginForm() {
         navigate('/admin/superadmins', { replace: true })
       }
     } catch (error) {
-        alert(error.response.data)
+        console.log(error.response.data)
     }
   };
   

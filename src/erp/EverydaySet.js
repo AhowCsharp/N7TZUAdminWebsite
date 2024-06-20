@@ -75,7 +75,7 @@ export default function EverydaySet() {
           fetchData();
         }
     } catch (error) {
-      alert(error.response.data)
+      console.log(error.response.data)
     }                    
   }
 
@@ -85,6 +85,7 @@ export default function EverydaySet() {
       if (response.status === 200) { 
         setRequest(prevRequest => ({
           ...prevRequest,
+          id:response.data.source.id,
           prize1Type: response.data.source.prize1Type,
           prize1Value: response.data.source.prize1Value,
           prize1Probability: response.data.source.prize1Probability,
@@ -117,7 +118,7 @@ export default function EverydaySet() {
         // Unauthorized
         navigate('/login', { replace: true });
       } else {
-        alert('發生錯誤');
+        alert('權限不足 跳回登入頁');
       }
     }
   };

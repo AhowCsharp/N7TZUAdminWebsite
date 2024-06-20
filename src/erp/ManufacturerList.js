@@ -87,7 +87,7 @@ export default function ManufacturerList() {
     },
     {
       field: 'safeAmount',
-      headerName: '目前安全量',
+      headerName: '安全量門檻',
       width: 120,
       editable: false,
     },
@@ -206,7 +206,6 @@ export default function ManufacturerList() {
             }
         } catch (error) {
             console.error("Error deleting record:", error);
-            alert('請確認資料型態有無錯誤');
         }
     }
 };
@@ -218,7 +217,7 @@ export default function ManufacturerList() {
       if (response.status === 200) { 
         setRows(response.data.source);
         setFilterRows(response.data.source);
-        setTotalRows(response.data.totalRows)
+        setTotalRows(response.data.totalItemCount)
       }
     } catch (error) {
       console.error('Error fetching data: ', error);
@@ -227,7 +226,7 @@ export default function ManufacturerList() {
         // Unauthorized
         navigate('/login', { replace: true });
       } else {
-        alert('發生錯誤');
+        alert('權限不足 跳回登入頁');
       }
     }
   };
@@ -336,7 +335,7 @@ export default function ManufacturerList() {
           fetchData();
         }
     } catch (error) {
-      alert(error.response.data)
+      console.log(error.response.data)
     }                    
   }
 
@@ -354,7 +353,7 @@ const updateManufacturerMoney = async () => {
           await fetchData();
         }
     } catch (error) {
-        alert(error.response.data)
+        console.log(error.response.data)
     }
 };
 
@@ -544,7 +543,7 @@ const updateManufacturerMoney = async () => {
                         fullWidth 
                         id="outlined-number"
                         size="small"
-                        label="剩餘安全量"
+                        label="派發安全量"
                         InputLabelProps={{
                             shrink: true,
                         }}
@@ -556,7 +555,7 @@ const updateManufacturerMoney = async () => {
             </Box> 
         </DialogContent>
         <DialogActions>
-              <Button onClick={updateManufacturerMoney} startIcon={<AttachMoneyIcon/>}>取消</Button>  
+              <Button onClick={updateManufacturerMoney} startIcon={<AttachMoneyIcon/>}>送出</Button>  
               <Button onClick={handleMoenyCloseForm} startIcon={<CancelIcon/>}>取消</Button>  
         </DialogActions>
       </Dialog>

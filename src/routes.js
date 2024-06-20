@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import Page404 from './pages/Page404';
 
 import SuperAdminList from './erp/SuperAdminList';
+import CustomerList from './erp/CustomerList';
 import ManufacturerList from './erp/ManufacturerList';
 import CommodityList from './erp/CommodityList';
 import EverydaySet from './erp/EverydaySet'
@@ -28,6 +29,7 @@ export default function Router() {
       children: [
         { element: <Navigate to="/superadmins" />, index: true },
         { path: 'superadmins', element: <SuperAdminList /> },
+        { path: 'customers', element: <CustomerList /> },
         { path: 'manufacturers', element: <ManufacturerList /> },
         { path: 'commodities', element: <CommodityList /> },
         { path: 'everyday', element: <EverydaySet /> },
